@@ -32,6 +32,15 @@ jobs:
 
       - name: Deploy to Container Apps
         run: |
+          ACR_PASSWORD=$(az acr credential show --name prreviewbotregistry --query "passwords[0].value" -o tsv)
+
+          az containerapp registry set \
+            --name pr-review-bot \
+            --resource-group pr-review-bot-rg \
+            --server prreviewbotregistry.azurecr.io \
+            --username prreviewbotregistry \
+            --password "$ACR_PASSWORD"
+
           az containerapp update \
             --name pr-review-bot \
             --resource-group pr-review-bot-rg \
