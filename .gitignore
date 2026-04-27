@@ -1,0 +1,8 @@
+bin/
+obj/
+.env
+.env.local
+*.user
+.vs/
+.idea/
+*.log

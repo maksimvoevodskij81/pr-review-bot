@@ -1,0 +1,6 @@
+@pr_review_bot_HostAddress = http://localhost:5188
+
+GET {{pr_review_bot_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
