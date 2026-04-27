@@ -1,0 +1,54 @@
+name: Deploy to Azure
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Build and push image to ACR
+        run: |
+          az acr create \
+            --resource-group pr-review-bot-rg \
+            --name prreviewbotregistry \
+            --sku Basic \
+            --admin-enabled true \
+            --output none 2>/dev/null || true
+
+          az acr build \
+            --registry prreviewbotregistry \
+            --image pr-review-bot:${{ github.sha }} \
+            --image pr-review-bot:latest \
+            .
+
+      - name: Deploy to Container Apps
+        run: |
+          az containerapp update \
+            --name pr-review-bot \
+            --resource-group pr-review-bot-rg \
+            --image prreviewbotregistry.azurecr.io/pr-review-bot:${{ github.sha }}
+
+      - name: Update secrets
+        run: |
+          az containerapp secret set \
+            --name pr-review-bot \
+            --resource-group pr-review-bot-rg \
+            --secrets \
+              anthropic-key="${{ secrets.ANTHROPIC_API_KEY }}" \
+              github-token="${{ secrets.BOT_GITHUB_TOKEN }}"
+
+          az containerapp update \
+            --name pr-review-bot \
+            --resource-group pr-review-bot-rg \
+            --set-env-vars \
+              ANTHROPIC_API_KEY=secretref:anthropic-key \
+              GITHUB_TOKEN=secretref:github-token
