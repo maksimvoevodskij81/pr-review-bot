@@ -69,15 +69,14 @@ public class ClaudeReviewService(AnthropicClient claude, ILogger<ClaudeReviewSer
     }
 
     private async Task<(ReviewCheckResult Security, ReviewCheckResult Logic, ReviewCheckResult Quality)>
-        RunParallelChecksAsync(string diffMessage)
+      RunParallelChecksAsync(string diffMessage)
     {
-        // All three run simultaneously — saves ~2/3 of latency vs sequential
-        var securityTask = RunCheckAsync("Security", ReviewPrompts.SecurityReviewer, diffMessage);
-        var logicTask = RunCheckAsync("Logic", ReviewPrompts.LogicReviewer, diffMessage);
-        var qualityTask = RunCheckAsync("Quality", ReviewPrompts.QualityReviewer, diffMessage);
-
-        await Task.WhenAll(securityTask, logicTask, qualityTask);
-        return (await securityTask, await logicTask, await qualityTask);
+        var security = await RunCheckAsync("Security", ReviewPrompts.SecurityReviewer, diffMessage);
+        await Task.Delay(3000);
+        var logic = await RunCheckAsync("Logic", ReviewPrompts.LogicReviewer, diffMessage);
+        await Task.Delay(3000);
+        var quality = await RunCheckAsync("Quality", ReviewPrompts.QualityReviewer, diffMessage);
+        return (security, logic, quality);
     }
 
     private async Task<ReviewCheckResult> RunCheckAsync(

@@ -18,9 +18,8 @@ public class GitHubService(IHttpClientFactory factory, ILogger<GitHubService> lo
 
         var diff = await response.Content.ReadAsStringAsync();
         // Truncate to avoid token limits — keep first 30k chars
-        return diff.Length > 30_000
-            ? diff[..30_000] + "\n\n[diff truncated — showing first 30k chars]"
-            : diff;
+        return diff.Length > 6_000 ? diff[..6_000] + "\n\n[diff truncated]"
+                                   : diff;
     }
 
     public async Task PostCommentAsync(string owner, string repo, int prNumber, string body)
